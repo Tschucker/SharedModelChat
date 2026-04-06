@@ -6,6 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E210F6B02F8360AA00C112B0 /* SharedModelKit in Frameworks */ = {isa = PBXBuildFile; productRef = E210F6AF2F8360AA00C112B0 /* SharedModelKit */; };
+		E210F6B52F841CDC00C112B0 /* MLXEmbedders in Frameworks */ = {isa = PBXBuildFile; productRef = E210F6B42F841CDC00C112B0 /* MLXEmbedders */; };
+		E210F6B72F841CDC00C112B0 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = E210F6B62F841CDC00C112B0 /* MLXLLM */; };
+		E210F6B92F841CDC00C112B0 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = E210F6B82F841CDC00C112B0 /* MLXLMCommon */; };
+		E210F6BB2F841CDC00C112B0 /* MLXVLM in Frameworks */ = {isa = PBXBuildFile; productRef = E210F6BA2F841CDC00C112B0 /* MLXVLM */; };
+		E210F6BE2F84265F00C112B0 /* LlamaSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E210F6BD2F84265F00C112B0 /* LlamaSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		E210F6832F83527100C112B0 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +61,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E210F6BB2F841CDC00C112B0 /* MLXVLM in Frameworks */,
+				E210F6B72F841CDC00C112B0 /* MLXLLM in Frameworks */,
+				E210F6B52F841CDC00C112B0 /* MLXEmbedders in Frameworks */,
+				E210F6B92F841CDC00C112B0 /* MLXLMCommon in Frameworks */,
+				E210F6BE2F84265F00C112B0 /* LlamaSwift in Frameworks */,
+				E210F6B02F8360AA00C112B0 /* SharedModelKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +127,12 @@
 			);
 			name = SharedModelChat;
 			packageProductDependencies = (
+				E210F6AF2F8360AA00C112B0 /* SharedModelKit */,
+				E210F6B42F841CDC00C112B0 /* MLXEmbedders */,
+				E210F6B62F841CDC00C112B0 /* MLXLLM */,
+				E210F6B82F841CDC00C112B0 /* MLXLMCommon */,
+				E210F6BA2F841CDC00C112B0 /* MLXVLM */,
+				E210F6BD2F84265F00C112B0 /* LlamaSwift */,
 			);
 			productName = SharedModelChat;
 			productReference = E210F6752F83526F00C112B0 /* SharedModelChat.app */;
@@ -195,6 +216,11 @@
 			);
 			mainGroup = E210F66C2F83526F00C112B0;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E210F6AE2F8360AA00C112B0 /* XCLocalSwiftPackageReference "../SharedModelKit" */,
+				E210F6B32F841CDC00C112B0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */,
+				E210F6BC2F84265F00C112B0 /* XCRemoteSwiftPackageReference "llama" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E210F6762F83526F00C112B0 /* Products */;
 			projectDirPath = "";
@@ -578,6 +604,64 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		E210F6AE2F8360AA00C112B0 /* XCLocalSwiftPackageReference "../SharedModelKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../SharedModelKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E210F6B32F841CDC00C112B0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-lm";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.31.3;
+			};
+		};
+		E210F6BC2F84265F00C112B0 /* XCRemoteSwiftPackageReference "llama" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mattt/llama.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8676.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E210F6AF2F8360AA00C112B0 /* SharedModelKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SharedModelKit;
+		};
+		E210F6B42F841CDC00C112B0 /* MLXEmbedders */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E210F6B32F841CDC00C112B0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXEmbedders;
+		};
+		E210F6B62F841CDC00C112B0 /* MLXLLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E210F6B32F841CDC00C112B0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLLM;
+		};
+		E210F6B82F841CDC00C112B0 /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E210F6B32F841CDC00C112B0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXLMCommon;
+		};
+		E210F6BA2F841CDC00C112B0 /* MLXVLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E210F6B32F841CDC00C112B0 /* XCRemoteSwiftPackageReference "mlx-swift-lm" */;
+			productName = MLXVLM;
+		};
+		E210F6BD2F84265F00C112B0 /* LlamaSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E210F6BC2F84265F00C112B0 /* XCRemoteSwiftPackageReference "llama" */;
+			productName = LlamaSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E210F66D2F83526F00C112B0 /* Project object */;
 }

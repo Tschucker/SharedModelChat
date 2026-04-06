@@ -1,24 +1,26 @@
-//
-//  ContentView.swift
-//  SharedModelChat
-//
-//  Created by Tom Schucker on 4/5/26.
-//
-
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+    @State private var selectedTab: Tab = .chat
+    
+    enum Tab {
+        case chat, settings
     }
-}
-
-#Preview {
-    ContentView()
+    
+    var body: some View {
+        TabView(selection: $selectedTab) {
+            ChatView()
+                .tabItem {
+                    Label("Chat", systemImage: "bubble.left.and.bubble.right")
+                }
+                .tag(Tab.chat)
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape")
+                }
+                .tag(Tab.settings)
+        }
+        .tint(Color.Chat.accent)
+    }
 }
