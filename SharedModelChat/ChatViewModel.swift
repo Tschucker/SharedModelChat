@@ -55,7 +55,7 @@ final class ChatViewModel: ObservableObject {
     @Published var inputText: String = ""
     @Published var isGenerating: Bool = false
     
-    // Model management
+    // Model management (status comes from SharedModelKit)
     @Published var modelStatus: ModelStatus = .unavailable
     @Published var selectedModel: SelectableModel = availableModels[0]
     @Published var hasSharedFolder: Bool = false
@@ -66,16 +66,34 @@ final class ChatViewModel: ObservableObject {
     private(set) var loadedModelURL: URL?
     
     // ╔═══════════════════════════════════════════════════════════════╗
-    // ║  INFERENCE ENGINE — swap this line to change engines         ║
+    // ║  INFERENCE ENGINES                                           ║
+    // ║                                                              ║
+    // ║  The view model holds one engine per format. When the user   ║
+    // ║  selects a model, `activeEngine` returns the correct one     ║
+    // ║  based on the model's format from the SharedModelKit         ║
+    // ║  catalog.                                                    ║
+    // ║                                                              ║
+    // ║  To enable real inference, uncomment the real engines below  ║
+    // ║  and add their SPM dependencies to the project.              ║
     // ╚═══════════════════════════════════════════════════════════════╝
-    //
-    //   private nonisolated(unsafe) let engine: any InferenceEngine = LlamaCppEngine()
-    //   private nonisolated(unsafe) let engine: any InferenceEngine = LocalLLMClientEngine()
-    //   private nonisolated(unsafe) let engine: any InferenceEngine = KuzcoEngine()
-    private nonisolated(unsafe) let engine: any InferenceEngine = MLXSwiftEngine()
-    //   private nonisolated(unsafe) let engine: any InferenceEngine = SpeziLLMEngine()
-    //
-    //private nonisolated(unsafe) let engine: any InferenceEngine = PlaceholderEngine()
+    
+    // Engine for GGUF models (llama.cpp-based):
+    private nonisolated(unsafe) let ggufEngine: any InferenceEngine = LlamaCppEngine()
+    //private nonisolated(unsafe) let ggufEngine: any InferenceEngine = PlaceholderEngine()
+    
+    // Engine for MLX models (Metal-accelerated):
+    private nonisolated(unsafe) let mlxEngine: any InferenceEngine = MLXSwiftEngine()
+    //private nonisolated(unsafe) let mlxEngine: any InferenceEngine = PlaceholderEngine()
+    
+    /// Returns the correct engine for the currently selected model format.
+    private var activeEngine: any InferenceEngine {
+        switch selectedModel.format {
+        case .mlx:
+            return mlxEngine
+        default:
+            return ggufEngine
+        }
+    }
     
     init() {
         store = ModelStore(backends: [
@@ -114,38 +132,27 @@ final class ChatViewModel: ObservableObject {
     
     // MARK: - Status
     
-    /// Query SharedModelKit for the current status of the selected model.
     func refreshStatus() async {
-        guard let descriptor = selectedModel.descriptor else {
-            modelStatus = .error("Unknown model: \(selectedModel.id)")
+        guard let descriptor = selectedModel.descriptor, let store else {
+            modelStatus = hasSharedFolder ? .error("Unknown model") : .unavailable
             return
         }
-        
-        guard let store else {
-            modelStatus = .unavailable
-            return
-        }
-        
         let status = await store.status(of: descriptor)
         modelStatus = status
         
-        // If the model is ready, update the loaded URL
+        // If the model is on disk, load it into the engine so it's ready for inference
         if case .ready(let url, _) = status {
-            loadedModelURL = url
+            if loadedModelURL != url {
+                await loadIntoEngine(url: url, name: descriptor.name)
+            }
         }
     }
     
     // MARK: - Download & Load
     
-    /// Download the selected model via SharedModelKit, then load it into the engine.
-    /// SharedModelKit handles both GGUF (single file) and MLX (HuggingFace repo directory).
+    /// SharedModelKit handles the entire download for both GGUF and MLX.
     func downloadAndLoadModel() {
-        guard let descriptor = selectedModel.descriptor else {
-            modelStatus = .error("Unknown model: \(selectedModel.id)")
-            return
-        }
-        
-        guard let store else {
+        guard let descriptor = selectedModel.descriptor, let store else {
             modelStatus = .unavailable
             return
         }
@@ -165,32 +172,36 @@ final class ChatViewModel: ObservableObject {
                 }
                 
                 await loadIntoEngine(url: url, name: descriptor.name)
-                
             } catch {
                 modelStatus = .error(error.localizedDescription)
             }
         }
     }
     
-    /// Load an already-downloaded model into the inference engine.
     func loadReadyModel() {
-        guard case .ready(let url, _) = modelStatus else { return }
-        guard let name = selectedModel.descriptor?.name else { return }
+        guard case .ready(let url, _) = modelStatus,
+              let name = selectedModel.descriptor?.name else { return }
         Task { await loadIntoEngine(url: url, name: name) }
     }
     
     private func loadIntoEngine(url: URL, name: String) async {
+        let engine = activeEngine
+        
         do {
-            await engine.unloadModel()
+            // Unload both engines to free memory before loading
+            await ggufEngine.unloadModel()
+            await mlxEngine.unloadModel()
+            
             try await engine.loadModel(from: url)
             
             loadedModelURL = url
             modelStatus = .ready(url: url, sizeBytes: nil)
             
+            let formatLabel = selectedModel.format == .mlx ? "MLX" : "GGUF"
             messages.append(
                 ChatMessage(
                     role: .assistant,
-                    content: "\(name) loaded via \(engine.name). Ready to chat!"
+                    content: "\(name) (\(formatLabel)) loaded via \(engine.name). Ready to chat!"
                 )
             )
         } catch {
@@ -198,14 +209,14 @@ final class ChatViewModel: ObservableObject {
         }
     }
     
-    /// Delete the selected model from all backends.
     func deleteModel() {
         guard let descriptor = selectedModel.descriptor, let store else { return }
         Task {
             do {
                 try await store.delete(descriptor)
                 loadedModelURL = nil
-                await engine.unloadModel()
+                await ggufEngine.unloadModel()
+                await mlxEngine.unloadModel()
                 await refreshStatus()
             } catch {
                 modelStatus = .error(error.localizedDescription)
@@ -216,7 +227,8 @@ final class ChatViewModel: ObservableObject {
     func didChangeModel() {
         loadedModelURL = nil
         Task {
-            await engine.unloadModel()
+            await ggufEngine.unloadModel()
+            await mlxEngine.unloadModel()
             await refreshStatus()
         }
     }
@@ -239,6 +251,9 @@ final class ChatViewModel: ObservableObject {
             msg.id != responseId && (msg.role == .user || msg.role == .assistant)
         }
         
+        // Capture the active engine for this generation
+        let engine = activeEngine
+        
         Task {
             do {
                 _ = try await engine.generate(messages: conversationHistory) { [weak self] token in
@@ -246,7 +261,6 @@ final class ChatViewModel: ObservableObject {
                         guard let self,
                               let idx = self.messages.firstIndex(where: { $0.id == responseId })
                         else { return }
-                        
                         self.messages[idx] = ChatMessage(
                             id: responseId,
                             role: .assistant,
@@ -277,7 +291,6 @@ final class ChatViewModel: ObservableObject {
                     )
                 }
             }
-            
             isGenerating = false
         }
     }
