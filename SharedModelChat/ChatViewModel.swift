@@ -59,6 +59,7 @@ final class ChatViewModel: ObservableObject {
     @Published var modelStatus: ModelStatus = .unavailable
     @Published var selectedModel: SelectableModel = availableModels[0]
     @Published var hasSharedFolder: Bool = false
+    @Published var downloadDate: Date? = nil
     
     // SharedModelKit
     nonisolated(unsafe) let bookmarkBackend = BookmarkBackend()
@@ -135,12 +136,19 @@ final class ChatViewModel: ObservableObject {
     func refreshStatus() async {
         guard let descriptor = selectedModel.descriptor, let store else {
             modelStatus = hasSharedFolder ? .error("Unknown model") : .unavailable
+            downloadDate = nil
             return
         }
         let status = await store.status(of: descriptor)
         modelStatus = status
         
-        // If the model is on disk, load it into the engine so it's ready for inference
+        // Read download metadata for the date
+        if let meta = await store.metadata(for: descriptor) {
+            downloadDate = meta.downloadedAt
+        } else {
+            downloadDate = nil
+        }
+        
         if case .ready(let url, _) = status {
             if loadedModelURL != url {
                 await loadIntoEngine(url: url, name: descriptor.name)

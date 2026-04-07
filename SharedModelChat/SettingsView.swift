@@ -148,6 +148,11 @@ struct SettingsView: View {
                                 .font(Font.Chat.caption)
                                 .foregroundStyle(Color.Chat.textSecondary)
                         }
+                        if let date = viewModel.downloadDate {
+                            Text("Downloaded \(date, style: .relative) ago")
+                                .font(Font.Chat.caption)
+                                .foregroundStyle(Color.Chat.textSecondary)
+                        }
                     }
                 }
                 

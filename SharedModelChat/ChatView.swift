@@ -41,6 +41,10 @@ struct ChatView: View {
                 }
             }
             .background(Color.Chat.canvas)
+            .scrollDismissesKeyboard(.interactively)
+            .onTapGesture {
+                isInputFocused = false
+            }
             
             inputBar
         }
@@ -159,6 +163,7 @@ struct ChatView: View {
             HStack(alignment: .bottom, spacing: 10) {
                 TextField("Message…", text: $viewModel.inputText, axis: .vertical)
                     .font(Font.Chat.inputField)
+                    .foregroundStyle(Color.Chat.textPrimary)
                     .lineLimit(1...5)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
