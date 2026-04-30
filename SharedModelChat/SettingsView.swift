@@ -13,7 +13,7 @@ struct SettingsView: View {
                     sharedFolderSection
                     currentModelSection
                     modelSelectionSection
-                    downloadLinksSection
+                    //downloadLinksSection
                     aboutSection
                 }
                 .padding(16)
@@ -274,7 +274,7 @@ struct SettingsView: View {
     }
     
     // MARK: - Download Links
-    
+    /*
     private var downloadLinksSection: some View {
         SettingsCard {
             VStack(alignment: .leading, spacing: 12) {
@@ -311,7 +311,7 @@ struct SettingsView: View {
             }
         }
     }
-    
+    */
     // MARK: - About
     
     private var aboutSection: some View {
