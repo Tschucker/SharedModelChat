@@ -16,10 +16,9 @@ The app compiles and runs as-is using a `PlaceholderEngine`. To enable real infe
 
 ## Screenshots
 
-The app has two tabs:
-
-- **Chat** — a conversational interface with streaming message bubbles, a model status banner, and keyboard-dismissing scroll behavior
-- **Settings** — shared folder picker, model selector grouped by format, live download progress, metadata display with download date, and HuggingFace links
+| Chat | Settings |
+|------|----------|
+| ![Chat tab showing a conversation with Mistral 7B](screenshots/Screenshot%20Chat.png) | ![Settings tab showing model selector and folder picker](screenshots/Screenshot%20Settings.png) |
 
 ## Requirements
 
