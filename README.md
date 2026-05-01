@@ -1,6 +1,6 @@
 # SharedModelChat
 
-A reference iOS chat application demonstrating how to integrate [SharedModelKit](https://github.com/yourname/SharedModelKit) for shared on-device AI model management. The app includes a clean conversational interface, model selection across GGUF and MLX formats, automatic engine switching, and full download lifecycle management.
+A reference iOS chat application demonstrating how to integrate [SharedModelKit](https://github.com/Tschucker/SharedModelKit) for shared on-device AI model management. The app includes a clean conversational interface, model selection across GGUF and MLX formats, automatic engine switching, and full download lifecycle management.
 
 ## Purpose
 
