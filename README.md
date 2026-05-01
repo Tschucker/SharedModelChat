@@ -1,4 +1,4 @@
-# SharedModelKit Demo
+# SharedModelChat
 
 A reference iOS chat application demonstrating how to integrate [SharedModelKit](https://github.com/yourname/SharedModelKit) for shared on-device AI model management. The app includes a clean conversational interface, model selection across GGUF and MLX formats, automatic engine switching, and full download lifecycle management.
 
@@ -32,7 +32,7 @@ The app has two tabs:
 
 ### 1. Create an Xcode Project
 
-Create a new **App** project in Xcode (SwiftUI, Swift). Name it `SharedModelKitDemo`.
+Create a new **App** project in Xcode (SwiftUI, Swift). Name it `SharedModelChat`.
 
 ### 2. Add SharedModelKit
 
@@ -48,11 +48,11 @@ Go to **File → Add Package Dependencies** → paste the SharedModelKit repo UR
 
 ### 3. Add Source Files
 
-Copy all `.swift` files from `SharedModelKitDemo/SharedModelKitDemo/` into your Xcode project. The files are:
+Copy all `.swift` files from `SharedModelChat/SharedModelChat/` into your Xcode project. The files are:
 
 | File | Description |
 |---|---|
-| `SharedModelKitDemoApp.swift` | App entry point, creates the `ChatViewModel` environment object |
+| `SharedModelChatApp.swift` | App entry point, creates the `ChatViewModel` environment object |
 | `ContentView.swift` | Tab bar with Chat and Settings tabs |
 | `ChatView.swift` | Message list, status banner, input bar, message bubbles |
 | `ChatViewModel.swift` | Core logic — model status, download, engine routing, chat |
@@ -282,9 +282,9 @@ The demo app exposes all models from `ModelCatalog.all`:
 ## Project Structure
 
 ```
-SharedModelKitDemo/
-└── SharedModelKitDemo/
-    ├── SharedModelKitDemoApp.swift   # @main entry, creates ChatViewModel
+SharedModelChat/
+└── SharedModelChat/
+    ├── SharedModelChatApp.swift   # @main entry, creates ChatViewModel
     ├── ContentView.swift             # TabView (Chat, Settings)
     ├── ChatView.swift                # Messages, status banner, input bar
     ├── ChatViewModel.swift           # Model management, engine routing, chat
