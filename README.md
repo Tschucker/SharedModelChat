@@ -26,7 +26,7 @@ The app has two tabs:
 - iOS 16+
 - Xcode 15+
 - Swift 5.9+
-- [SharedModelKit](https://github.com/yourname/SharedModelKit) (local or remote SPM dependency)
+- [SharedModelKit](https://github.com/Tschucker/SharedModelKit) (local or remote SPM dependency)
 
 ## Setup
 
