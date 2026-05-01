@@ -283,64 +283,6 @@ final class MLXSwiftEngine: InferenceEngine, @unchecked Sendable {
 
 
 // ═══════════════════════════════════════════════════════════════════
-// MARK: - 3. LocalLLMClient (tattn)
-// ═══════════════════════════════════════════════════════════════════
-//
-// SPM: .package(url: "https://github.com/tattn/LocalLLMClient", from: "0.1.0")
-// Import: LocalLLMClient, LocalLLMClientLlama
-//
-// Unified API for both GGUF (llama.cpp) and MLX backends.
-// Handles chat templates automatically.
-//
-// ┌─────────────────────────────────────────────────────────────────┐
-
-/*
-import LocalLLMClient
-import LocalLLMClientLlama
-
-final class LocalLLMClientEngine: InferenceEngine, @unchecked Sendable {
-    let name = "LocalLLMClient"
-    
-    private var client: LocalLLMClient?
-    
-    func loadModel(from url: URL) async throws {
-        client = try await LocalLLMClient.llama(
-            url: url,
-            parameter: .init(context: 4096, temperature: 0.7, topK: 40, topP: 0.9)
-        )
-    }
-    
-    func generate(
-        messages: [ChatMessage],
-        onToken: @escaping @Sendable (String) -> Void
-    ) async throws -> String {
-        guard let client else { throw InferenceError.modelNotLoaded }
-        
-        let llmMessages: [LocalLLMClient.Message] = messages.map { msg in
-            switch msg.role {
-            case .user:      return .user(msg.content)
-            case .assistant: return .assistant(msg.content)
-            case .system:    return .system(msg.content)
-            }
-        }
-        
-        var result = ""
-        let stream = try await client.stream(llmMessages)
-        for try await token in stream {
-            result += token
-            onToken(token)
-        }
-        return result
-    }
-    
-    func unloadModel() async { client = nil }
-}
-*/
-
-// └─────────────────────────────────────────────────────────────────┘
-
-
-// ═══════════════════════════════════════════════════════════════════
 // MARK: - Placeholder Engine (demo only — no real inference)
 // ═══════════════════════════════════════════════════════════════════
 

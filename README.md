@@ -23,47 +23,42 @@ The app has two tabs:
 
 ## Requirements
 
-- iOS 16+
-- Xcode 15+
-- Swift 5.9+
-- [SharedModelKit](https://github.com/Tschucker/SharedModelKit) (local or remote SPM dependency)
+- iOS 18+
+- Xcode 16+
+- Swift 6+
 
 ## Setup
 
-### 1. Create an Xcode Project
+### Creating a New Project
 
-Create a new **App** project in Xcode (SwiftUI, Swift). Name it `SharedModelChat`.
+1. Create a new **App** project in Xcode (SwiftUI, Swift). Name it `SharedModelChat`.
+2. Add all `.swift` files from `SharedModelChat/SharedModelChat/` to your target.
+3. Add the package dependencies below.
+4. Build and run.
 
-### 2. Add SharedModelKit
+### Package Dependencies
 
-**From a local checkout:**
+**SharedModelKit** (required — model storage, discovery, download, status):
 
-1. Drag the `SharedModelKit/` folder into the Xcode project navigator
-2. Xcode recognizes the `Package.swift` and offers to add it
-3. Go to your app target → General → Frameworks → `+` → select **SharedModelKit**
+Add via **File → Add Package Dependencies** using the [SharedModelKit](https://github.com/Tschucker/SharedModelKit) repo URL, or drag a local checkout into the project navigator and link **SharedModelKit** under your target's Frameworks.
 
-**From GitHub:**
+**LlamaSwift** (required for GGUF inference):
 
-Go to **File → Add Package Dependencies** → paste the SharedModelKit repo URL.
+```
+https://github.com/mattt/llama.swift  —  up to next major from 2.8676.0
+```
 
-### 3. Add Source Files
+Add product: `LlamaSwift`
 
-Copy all `.swift` files from `SharedModelChat/SharedModelChat/` into your Xcode project. The files are:
+**MLX Swift** (required for MLX inference):
 
-| File | Description |
-|---|---|
-| `SharedModelChatApp.swift` | App entry point, creates the `ChatViewModel` environment object |
-| `ContentView.swift` | Tab bar with Chat and Settings tabs |
-| `ChatView.swift` | Message list, status banner, input bar, message bubbles |
-| `ChatViewModel.swift` | Core logic — model status, download, engine routing, chat |
-| `SettingsView.swift` | Folder picker, model selector, download metadata display |
-| `ChatMessage.swift` | Message data model |
-| `DesignSystem.swift` | Color palette, typography, and button styles |
-| `InferenceEngine.swift` | Engine protocol + implementations for llama.cpp, MLX, and others |
+```
+https://github.com/ml-explore/mlx-swift-lm  —  up to next major from 2.31.3
+```
 
-### 4. Build and Run
+Add products: `MLXLLM`, `MLXLMCommon`, `MLXEmbedders`, `MLXVLM`
 
-The app runs immediately using the `PlaceholderEngine`, which returns simulated text responses. To use real inference, see [Enabling Inference Engines](#enabling-inference-engines) below.
+> To build without the inference dependencies, swap both engines to `PlaceholderEngine` in `ChatViewModel.swift` — see [Inference Engines](#inference-engines) for details.
 
 ## Architecture
 
@@ -190,70 +185,43 @@ protocol InferenceEngine: Sendable {
 
 ### Available Implementations
 
-The `InferenceEngine.swift` file contains complete implementations for five engines, all commented out behind `/* ... */` blocks ready to uncomment:
-
-| Engine | Module | SPM Package | Best For |
+| Engine | Module | SPM Package | Format |
 |---|---|---|---|
-| `LlamaCppEngine` | `LlamaSwift` | `mattt/llama.swift` | Full C API control over llama.cpp |
-| `MLXSwiftEngine` | `MLXLLM`, `MLXLMCommon` | `ml-explore/mlx-swift-lm` | Fastest Metal-native MLX inference |
-| `LocalLLMClientEngine` | `LocalLLMClient` | `tattn/LocalLLMClient` | Clean unified API for GGUF + MLX |
-| `PlaceholderEngine` | (built-in) | — | Demo/development without dependencies |
+| `LlamaCppEngine` | `LlamaSwift` | `mattt/llama.swift` | GGUF |
+| `MLXSwiftEngine` | `MLXLLM`, `MLXLMCommon` | `ml-explore/mlx-swift-lm` | MLX |
+| `PlaceholderEngine` | (built-in) | — | Any (simulated responses) |
 
-### Enabling Inference Engines
+Both real engines are active by default. `ChatViewModel` selects between them via the `activeEngine` computed property, routing MLX-format models to `MLXSwiftEngine` and everything else to `LlamaCppEngine`.
 
-#### Step 1: Add SPM Dependencies
-
-For llama.cpp (GGUF models):
+To build without the heavy SPM dependencies, swap either engine back to `PlaceholderEngine` in `ChatViewModel.swift`:
 
 ```swift
-.package(url: "https://github.com/mattt/llama.swift", .upToNextMajor(from: "2.8209.0"))
-```
-
-For MLX Swift (MLX models):
-
-```swift
-.package(url: "https://github.com/ml-explore/mlx-swift-lm", .upToNextMinor(from: "2.30.1"))
-```
-
-#### Step 2: Uncomment the Engine
-
-In `InferenceEngine.swift`, find the engine's `/* ... */` block and remove the comment delimiters.
-
-#### Step 3: Set the Engine in ChatViewModel
-
-```swift
-// Replace:
 private nonisolated(unsafe) let ggufEngine: any InferenceEngine = PlaceholderEngine()
 private nonisolated(unsafe) let mlxEngine: any InferenceEngine = PlaceholderEngine()
-
-// With:
-private nonisolated(unsafe) let ggufEngine: any InferenceEngine = LlamaCppEngine()
-private nonisolated(unsafe) let mlxEngine: any InferenceEngine = MLXSwiftEngine()
 ```
-
-That's it. The `activeEngine` computed property handles routing based on the selected model's format.
 
 ### LlamaCppEngine Details
 
-Uses the raw llama.cpp C API via the `LlamaSwift` module:
+Uses the raw llama.cpp C API via the `LlamaSwift` module (`mattt/llama.swift`):
 
-- Batch fields accessed via direct pointer indexing: `batch.token[i]`, `batch.pos[i]`, `batch.logits[i]`
-- Context recreated before each generation for a clean KV cache
-- Vocabulary accessed via `llama_model_get_vocab(model)` (returns optional, unwrapped with guard)
-- Greedy sampling by iterating logits and selecting the argmax
-- End-of-sequence detected via `llama_vocab_eos(vocab)`
-- Token-to-text conversion via `llama_token_to_piece(vocab, token, ...)`
-- Prompt formatting uses ChatML (`<|im_start|>user\n...<|im_end|>`)
+- All layers offloaded to Metal (`n_gpu_layers = 99`), context window 2048, batch size 512
+- Context is recreated before each generation for a clean KV cache
+- Vocabulary via `llama_model_get_vocab(model)`; EOS detected via `llama_vocab_eos(vocab)`
+- Greedy sampling — iterates logits array and picks argmax
+- Token decoding via `llama_token_to_piece(vocab, token, ...)`
+- Prompt formatted as ChatML (`<|im_start|>role\n...<|im_end|>`)
+- Max 512 generated tokens per turn
 
 ### MLXSwiftEngine Details
 
-Uses Apple's MLX framework via the `MLXLLM` and `MLXLMCommon` modules:
+Uses Apple's MLX framework via `MLXLLM` and `MLXLMCommon` (`ml-explore/mlx-swift-lm`):
 
-- Model loaded from a local directory via `LLMModelFactory.shared.loadContainer(configuration: ModelConfiguration(directory: url))`
-- SharedModelKit provides the directory URL (downloads the HuggingFace repo contents)
-- Memory managed with `MLX.GPU.set(cacheLimit:)` for iOS
-- Streaming via `MLXLMCommon.generate(input:parameters:context:)` with a callback
-- Token decoding uses `context.tokenizer.decode(tokens:)` which returns cumulative text, diffed to extract new tokens
+- GPU cache capped at 20 MB via `MLX.GPU.set(cacheLimit:)` before loading
+- Model loaded from the directory URL SharedModelKit provides: `LLMModelFactory.shared.loadContainer(configuration: ModelConfiguration(directory: url))`
+- Input prepared with `context.processor.prepare(input: .init(prompt: .text(prompt)))`
+- Generation parameters: `temperature: 0.7`, `topP: 0.9`, max 512 tokens
+- `MLXLMCommon.generate` callback receives cumulative token arrays; new text is extracted by diffing against the previous decoded length
+- Prompt formatted as ChatML
 
 ## Available Models
 
